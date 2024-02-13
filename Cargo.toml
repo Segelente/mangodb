@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 mongodb = {version = "2.8.1", features = ["tokio-runtime"] }
 tokio = { version = "1.36.0", features = ["full"] }
+actix-web = "4.5.1"
+liquid = "0.26.4"
+serde = { version = "1.0.196", features = ["derive"] }
