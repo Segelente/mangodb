@@ -1,0 +1,1 @@
+# MongoDB Example for university called mangodb for the fruity collection
