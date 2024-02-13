@@ -1,7 +1,7 @@
 
 mod easy_example;
-mod blog;
+mod example2;
 
 fn main() {
-    blog::main().unwrap();
+    example2::blog::main().unwrap();
 }

@@ -2,10 +2,17 @@
 use std::fs::read_to_string;
 use std::path::Path;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::web::Data;
 use liquid::{object, Template};
+use mongodb::Client;
+use mongodb::options::ClientOptions;
 use serde::Serialize;
+use tokio::sync::Mutex;
+use crate::example2::queries::get_post;
 
-
+struct AppState {
+    client: Mutex<Client>,
+}
 #[derive(Debug, Serialize)]
 struct Post {
     title: String,
@@ -30,14 +37,8 @@ async fn index() -> impl Responder{
         .body(body)
 }
 #[get("/post/{id}")]
-async fn post() -> impl Responder{
-    let globals = object!({
-        "post": Post {
-            title: "Hello, world!".to_string(),
-            content: "This is a blog post".to_string(),
-            path: "/post/1".to_string(),
-        }
-    });
+async fn post(data: Data<AppState>, id: web::Path<i32>) -> impl Responder{
+    let globals = get_post(data.client.lock(), id.into_inner() ).await;
     let template = liquid_parse("src/web/post.liquid");
     let output = template.render(&globals).unwrap();
     HttpResponse::Ok()
@@ -47,7 +48,14 @@ async fn post() -> impl Responder{
 
 #[actix_web::main]
 pub(crate) async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    let db_url = &std::env::var("DATABASE_URL").unwrap();
+    let  client_options = ClientOptions::parse(db_url).await.unwrap();
+    let client = Client::with_options(client_options).unwrap();
+
+    HttpServer::new(move || {
+        let app_state = Data::new(AppState {
+            client: Mutex::new(client.clone()),
+        });
         App::new()
             .service(index)
             .service(post)
