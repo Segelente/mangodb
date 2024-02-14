@@ -59,18 +59,28 @@ async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
         .body(output)
 }
 
-#[post("/post/create_post")]
+#[get("/new_post")]
+async fn new_post() -> impl Responder {
+    let body = read_to_string("src/web/create_post.liquid").unwrap();
+    HttpResponse::Ok()
+        .content_type("text/html")
+        .body(body)
+}
+#[post("/create_post")]
 async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Post>) -> impl Responder {
+    println!("{:?}", post_json);
     let client = data.client.lock().await.clone();
-    let new_post = post_json.into_inner();
-    let new_post: Post = Post {
-        title: new_post.clone().title,
-        content: new_post.clone().content,
-        path: new_post.clone().path
+    let inserting_post = post_json.into_inner();
+    let inserting_post: Post = Post {
+        title: inserting_post.clone().title,
+        content: inserting_post.clone().content,
+        path: inserting_post.clone().path
     };
-    create_post(client, new_post).await;
+    create_post(client, inserting_post).await;
     HttpResponse::Ok()
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RequestComment {
     pub author: String,
     pub text: String,
@@ -103,6 +113,8 @@ pub(crate) async fn main() -> std::io::Result<()> {
         App::new()
             .service(index)
             .service(post)
+            .service(create_post_page)
+            .service(new_post)
             .service(create_post_page)
             .app_data(app_state)
     })

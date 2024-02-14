@@ -29,27 +29,13 @@
             path: path
         };
 
-        fetch('/post/create_post', {
+        fetch('/create_post', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(post)
         })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                // Do something with the success response
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Handle error
-            });
     }
 </script>
 </body>
