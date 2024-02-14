@@ -8,13 +8,58 @@
 </head>
 <body class="bg-pink-100 flex justify-center items-center h-full">
 <div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md h-full">
-    <h1 class="text-pink-600 text-3xl font-semibold mb-6 text-center">        {{ post.title }}
+    <h1 class="text-pink-600 text-3xl font-semibold mb-6 text-center">
+        {{ post.title }}
     </h1>
     <div class="space-y-4">
         {{ post.content }}
-
     </div>
-    <a href="/" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">Home</a>
+    <div class="mt-6">
+        <a href="/" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">Home</a>
+    </div>
+</div>
+<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md bottom-0 h-full">
+    <div class="space-y-4">
+        {% for comment in comments %}
+        <div class="bg-gray-100 p-4 rounded-lg">
+            <h2 class="text-pink-600 text-xl font-semibold">{{ comment.author }}</h2>
+            <p>{{ comment.text }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="space-y-4">
+        <form id="postForm" class="flex flex-col">
+            <label for="author" class="mb-4">author:</label>
+            <input type="text" id="author" name="author" class="border border-gray-300 rounded-lg py-2 px-4">
+            <label for="text" class="mb-4">text:</label>
+            <textarea id="text" name="text" rows="4" cols="50" class="border border-gray-300 rounded-lg py-2 px-4"></textarea>
+            <button type="button" onclick="submit_comment()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg w-full">Create Comment</button>
+        </form>
+    </div>
 </div>
 </body>
+<script>
+    function submit_comment() {
+        var author = document.getElementById('author').value;
+        var text = document.getElementById('text').value;
+        var path = window.location.pathname.split('/').pop();
+        var comment = {
+            author: author,
+            text: text,
+            path: path
+        };
+
+        fetch('/create_comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(comment)
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '/post/' + path;
+            }
+        });
+    }
+</script>
 </html>

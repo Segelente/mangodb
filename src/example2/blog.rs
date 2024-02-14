@@ -11,7 +11,7 @@ use tracing::info;
 use mongodb::options::ClientOptions;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use crate::example2::queries::{create_comment, create_post, get_all_posts, get_post};
+use crate::example2::queries::{create_comment, create_post, get_all_posts, get_comment, get_post};
 
 pub(crate) struct AppState {
     client: Mutex<Client>,
@@ -53,10 +53,13 @@ async fn index(data: Data<AppState>) -> impl Responder{
 }
 #[get("/post/{path}")]
 async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
+    let path = path.into_inner();
     let client = data.client.lock().await.clone();
     info!("Getting post with id {}", path.clone());
+    let globals_post = get_post(client.clone(), path.clone()).await;
+    let globals_comments = get_comment(client, path).await;
     let globals = object!(
-        {"post": get_post(client, path.into_inner() ).await});
+        {"post": globals_post, "comments": globals_comments});
     let template = liquid_parse("src/web/post.liquid");
     println!("{:?}", globals);
     let output = template.render(&globals).unwrap();
@@ -86,19 +89,15 @@ async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Post>) 
     HttpResponse::Ok()
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RequestComment {
-    pub author: String,
-    pub text: String,
-}
-#[post("/post/{path}")]
-async fn create_comment_page(data: Data<AppState>, comment_json: web::Json<RequestComment>, path: web::Path<String>) -> impl Responder{
+#[post("/create_comment")]
+async fn create_comment_page(data: Data<AppState>, comment_json: web::Json<Comment>) -> impl Responder{
+    println!("{:?}", comment_json);
     let client = data.client.lock().await.clone();
     let request_comment = comment_json.into_inner();
     let comment = Comment {
         author: request_comment.author,
         text: request_comment.text,
-        path: path.to_string()
+        path: request_comment.path
     };
     create_comment(client, comment).await;
     HttpResponse::Ok()
@@ -121,7 +120,7 @@ pub(crate) async fn main() -> std::io::Result<()> {
             .service(post)
             .service(create_post_page)
             .service(new_post)
-            .service(create_post_page)
+            .service(create_comment_page)
             .app_data(app_state)
     })
         .bind(("127.0.0.1", 8080))?
