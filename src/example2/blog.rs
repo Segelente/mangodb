@@ -22,6 +22,12 @@ pub struct Post {
     pub content: String,
     pub path: String,
 }
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Comment {
+    pub author: String,
+    pub text: String,
+    pub path: String,
+}
 
 pub(crate) fn liquid_parse(path: impl AsRef<Path>) -> Template {
     let compiler = liquid::ParserBuilder::with_stdlib()
