@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 use std::path::Path;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use actix_web::cookie::time::macros::date;
-use actix_web::web::Data;
+use actix_web::web::{Data, patch};
 use liquid::{object, ObjectView, Template, ValueView};
 use mongodb::Client;
 use dotenvy;
@@ -11,7 +11,7 @@ use tracing::info;
 use mongodb::options::ClientOptions;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use crate::example2::queries::{create_post, get_post};
+use crate::example2::queries::{create_comment, create_post, get_post};
 
 pub(crate) struct AppState {
     client: Mutex<Client>,
@@ -69,6 +69,22 @@ async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Post>) 
         path: new_post.clone().path
     };
     create_post(client, new_post).await;
+    HttpResponse::Ok()
+}
+pub struct RequestComment {
+    pub author: String,
+    pub text: String,
+}
+#[post("/post/{path}")]
+async fn create_comment_page(data: Data<AppState>, comment_json: web::Json<RequestComment>, path: web::Path<String>) -> impl Responder{
+    let client = data.client.lock().await.clone();
+    let request_comment = comment_json.into_inner();
+    let comment = Comment {
+        author: request_comment.author,
+        text: request_comment.text,
+        path: path.to_string()
+    };
+    create_comment(client, comment).await;
     HttpResponse::Ok()
 }
 
