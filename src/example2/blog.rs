@@ -2,6 +2,7 @@
 use std::fs::read_to_string;
 use std::path::Path;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::cookie::time::macros::date;
 use actix_web::web::Data;
 use liquid::{object, ObjectView, Template, ValueView};
 use mongodb::Client;
@@ -40,15 +41,29 @@ async fn index() -> impl Responder{
 }
 #[get("/post/{path}")]
 async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
+    let client = data.client.lock().await.clone();
     info!("Getting post with id {}", path.clone());
     let globals = object!(
-        {"post": get_post(data.client.lock().await.clone(), path.into_inner() ).await});
+        {"post": get_post(client, path.into_inner() ).await});
     let template = liquid_parse("src/web/post.liquid");
     println!("{:?}", globals);
     let output = template.render(&globals).unwrap();
     HttpResponse::Ok()
         .content_type("text/html")
         .body(output)
+}
+
+#[post("/post/create_post")]
+async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Post>) -> impl Responder {
+    let client = data.client.lock().await.clone();
+    let new_post = post_json.into_inner();
+    let new_post: Post = Post {
+        title: new_post.clone().title,
+        content: new_post.clone().content,
+        path: new_post.clone().path
+    };
+    create_post(client, new_post).await;
+    HttpResponse::Ok()
 }
 
 #[actix_web::main]
@@ -66,6 +81,7 @@ pub(crate) async fn main() -> std::io::Result<()> {
         App::new()
             .service(index)
             .service(post)
+            .service(create_post_page)
             .app_data(app_state)
     })
         .bind(("127.0.0.1", 8080))?

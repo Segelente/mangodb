@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Post</title>
+</head>
+<body>
+<h2>Create Post</h2>
+<form id="postForm">
+    <label for="title">Title:</label><br>
+    <input type="text" id="title" name="title"><br>
+    <label for="content">Content:</label><br>
+    <textarea id="content" name="content" rows="4" cols="50"></textarea><br>
+    <label for="path">Path:</label><br>
+    <input type="text" id="path" name="path"><br><br>
+    <button type="button" onclick="createPost()">Create Post</button>
+</form>
+
+<script>
+    function createPost() {
+        var title = document.getElementById('title').value;
+        var content = document.getElementById('content').value;
+        var path = document.getElementById('path').value;
+
+        var post = {
+            title: title,
+            content: content,
+            path: path
+        };
+
+        fetch('/post/create_post', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(post)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                // Do something with the success response
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle error
+            });
+    }
+</script>
+</body>
+</html>

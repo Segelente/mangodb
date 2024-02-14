@@ -1,5 +1,6 @@
 use mongodb::bson::doc;
 use mongodb::Client;
+use serde::de::Error;
 use crate::example2::blog::Post;
 
 pub async fn get_post(client: Client, path: String) -> Post {
@@ -26,5 +27,16 @@ mod tests{
         let client = Client::with_uri_str("mongodb://localhost:27017").await.unwrap();
         let post = get_post(client, "Hello, world!".to_string()).await;
         assert_eq!(post.title, "Hello, world!");
+    }
+
+    #[tokio::test]
+    async fn test_create_post(){
+        let post = Post {
+            title: "Dies ist ein Test".to_string(),
+            content: "Hallo".to_string(),
+            path:"test1".to_string()
+        };
+        let client = Client::with_uri_str("mongodb://localhost:27017").await.unwrap();
+        create_post(client, post).await;
     }
 }
