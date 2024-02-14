@@ -4,18 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Post</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9e6e6;
+            padding: 20px;
+        }
+
+        .post-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #f68ec4;
+        }
+
+        p {
+            color: #911055;
+        }
+    </style>
 </head>
-<body>
-<h2>Create Post</h2>
-<form id="postForm">
-    <label for="title">Title:</label><br>
-    <input type="text" id="title" name="title"><br>
-    <label for="content">Content:</label><br>
-    <textarea id="content" name="content" rows="4" cols="50"></textarea><br>
-    <label for="path">Path:</label><br>
-    <input type="text" id="path" name="path"><br><br>
-    <button type="button" onclick="createPost()">Create Post</button>
-</form>
+<div class="post-container">
+    <h2>Create Post</h2>
+    <form id="postForm">
+        <label for="title">Title:</label><br>
+        <input type="text" id="title" name="title"><br>
+        <label for="content">Content:</label><br>
+        <textarea id="content" name="content" rows="4" cols="50"></textarea><br>
+        <label for="path">Path:</label><br>
+        <input type="text" id="path" name="path"><br><br>
+        <button type="button" onclick="createPost()">Create Post</button>
+    </form>
+</div>
 
 <script>
     function createPost() {

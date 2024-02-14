@@ -11,7 +11,7 @@ use tracing::info;
 use mongodb::options::ClientOptions;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
-use crate::example2::queries::{create_comment, create_post, get_post};
+use crate::example2::queries::{create_comment, create_post, get_all_posts, get_post};
 
 pub(crate) struct AppState {
     client: Mutex<Client>,
@@ -39,11 +39,17 @@ pub(crate) fn liquid_parse(path: impl AsRef<Path>) -> Template {
 }
 
 #[get("/")]
-async fn index() -> impl Responder{
-    let body = read_to_string("src/web/index.liquid").unwrap();
+async fn index(data: Data<AppState>) -> impl Responder{
+    let client = data.client.lock().await.clone();
+    let posts = get_all_posts(client).await;
+    let globals = object!(
+        {"posts": posts });
+    let template = liquid_parse("src/web/index.liquid");
+    println!("{:?}", globals);
+    let output = template.render(&globals).unwrap();
     HttpResponse::Ok()
         .content_type("text/html")
-        .body(body)
+        .body(output)
 }
 #[get("/post/{path}")]
 async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{

@@ -1,38 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9e6e6;
-            padding: 20px;
-        }
-
-        .post-container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            color: #f68ec4;
-        }
-
-        p {
-            color: #911055;
-        }
-    </style>
+    <title>MangoDB Blog</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-<div class="post-container">
-    <h1>{{ post.title }}</h1>
-    <p>{{ post.content }}</p>
+<body class="bg-pink-100 flex justify-center items-center h-full">
+<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md h-full">
+    <h1 class="text-pink-600 text-3xl font-semibold mb-6 text-center">        {{ post.title }}
+    </h1>
+    <div class="space-y-4">
+        {{ post.content }}
+
+    </div>
+    <a href="/" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">Home</a>
 </div>
 </body>
 </html>

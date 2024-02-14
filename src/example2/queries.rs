@@ -1,4 +1,4 @@
-use futures::TryStreamExt;
+use futures::{StreamExt, TryStreamExt};
 use mongodb::bson::doc;
 use mongodb::Client;
 use serde::de::Error;
@@ -11,6 +11,13 @@ pub async fn get_post(client: Client, path: String) -> Post {
         Some(post) => post,
         None => panic!("No post found with path {}", path)
     }
+}
+pub async fn get_all_posts(client: Client) -> Vec<Post> {
+    let db = client.database("post");
+    let collection = db.collection("post");
+    let posts = collection.find(None, None).await.unwrap();
+    let vec_posts: Vec<Post> = posts.try_collect().await.unwrap();
+    vec_posts
 }
 pub async fn get_comment(client: Client, path: String) -> Vec<Comment> {
     let db = client.database("comment");
@@ -66,6 +73,12 @@ mod tests{
         let client = Client::with_uri_str("mongodb://localhost:27017").await.unwrap();
         let comment = get_comment(client, "test1".to_string()).await;
         assert_eq!("Bernd", comment[0].author)
+    }
+    #[tokio::test]
+    async fn test_get_all_posts(){
+        let client = Client::with_uri_str("mongodb://localhost:27017").await.unwrap();
+        let post = get_all_posts(client).await;
+        println!("{:?}", post)
     }
 
 }
