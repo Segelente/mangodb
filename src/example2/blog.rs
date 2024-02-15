@@ -10,6 +10,7 @@ use dotenvy;
 use tracing::info;
 use mongodb::options::ClientOptions;
 use serde::{Deserialize, Serialize};
+use rand::Rng;
 use tokio::sync::Mutex;
 use crate::example2::queries::{create_comment, create_post, get_all_posts, get_comment, get_post};
 
@@ -44,7 +45,7 @@ async fn index(data: Data<AppState>) -> impl Responder{
     let posts = get_all_posts(client).await;
     let globals = object!(
         {"posts": posts });
-    let template = liquid_parse("src/web/index.liquid");
+    let template = liquid_parse("src/example2/web/index.liquid");
     println!("{:?}", globals);
     let output = template.render(&globals).unwrap();
     HttpResponse::Ok()
@@ -60,7 +61,7 @@ async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
     let globals_comments = get_comment(client, path).await;
     let globals = object!(
         {"post": globals_post, "comments": globals_comments});
-    let template = liquid_parse("src/web/post.liquid");
+    let template = liquid_parse("src/example2/web/post.liquid");
     println!("{:?}", globals);
     let output = template.render(&globals).unwrap();
     HttpResponse::Ok()
@@ -70,20 +71,41 @@ async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
 
 #[get("/new_post")]
 async fn new_post() -> impl Responder {
-    let body = read_to_string("src/web/create_post.liquid").unwrap();
+    let body = read_to_string("src/example2/web/create_post.liquid").unwrap();
     HttpResponse::Ok()
         .content_type("text/html")
         .body(body)
 }
+
+fn random_path() -> String{
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                            abcdefghijklmnopqrstuvwxyz\
+                            0123456789";
+    const PASSWORD_LEN: usize = 10;
+    let mut rng = rand::thread_rng();
+
+    let password: String = (0..PASSWORD_LEN)
+        .map(|_| {
+            let idx = rng.gen_range(0..CHARSET.len());
+            CHARSET[idx] as char
+        })
+        .collect();
+    password
+}
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct RequestPost {
+    title: String,
+    content: String,
+}
 #[post("/create_post")]
-async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Post>) -> impl Responder {
+async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<RequestPost>) -> impl Responder {
     println!("{:?}", post_json);
     let client = data.client.lock().await.clone();
-    let inserting_post = post_json.into_inner();
+    let request_post = post_json.into_inner();
     let inserting_post: Post = Post {
-        title: inserting_post.clone().title,
-        content: inserting_post.clone().content,
-        path: inserting_post.clone().path
+        title: request_post.clone().title,
+        content: request_post.clone().content,
+        path: random_path()
     };
     create_post(client, inserting_post).await;
     HttpResponse::Ok()

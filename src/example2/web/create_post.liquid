@@ -17,8 +17,6 @@
             <input type="text" id="title" name="title" class="border border-gray-300 rounded-lg py-2 px-4">
             <label for="content" class="mb-4">Content:</label>
             <textarea id="content" name="content" rows="4" cols="50" class="border border-gray-300 rounded-lg py-2 px-4"></textarea>
-            <label for="path" class="mb-4">Path:</label>
-            <input type="text" id="path" name="path" class="border border-gray-300 rounded-lg py-2 px-4">
             <button type="button" onclick="createPost()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg w-full">Create Post</button>
         </form>
 
@@ -33,12 +31,10 @@
     function createPost() {
         var title = document.getElementById('title').value;
         var content = document.getElementById('content').value;
-        var path = document.getElementById('path').value;
 
         var post = {
             title: title,
             content: content,
-            path: path
         };
 
         fetch('/create_post', {
@@ -49,7 +45,7 @@
             body: JSON.stringify(post)
         }).then(response => {
             if (response.ok) {
-                window.location.href = '/post/' + path;
+                window.location.href = '/'
             }
         });
     }
