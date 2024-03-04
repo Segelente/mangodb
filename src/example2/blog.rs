@@ -7,27 +7,40 @@ use actix_web::web::{Data, patch};
 use liquid::{object, ObjectView, Template, ValueView};
 use mongodb::Client;
 use dotenvy;
+use mongodb::bson::{Bson, doc};
 use tracing::info;
 use mongodb::options::ClientOptions;
 use serde::{Deserialize, Serialize};
 use rand::Rng;
 use tokio::sync::Mutex;
-use crate::example2::queries::{create_comment, create_post, get_all_posts, get_comment, get_post};
+use crate::example2::queries::{create_comment, create_post, get_all_posts, get_post};
 
 pub(crate) struct AppState {
     client: Mutex<Client>,
 }
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Post {
     pub title: String,
     pub content: String,
     pub path: String,
+    #[serde(default)]
+    pub comments: Vec<Comment>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Comment {
     pub author: String,
     pub text: String,
     pub path: String,
+}
+
+impl Into<Bson> for Comment {
+    fn into(self) -> Bson {
+        Bson::Document(doc! {
+            "author": self.author,
+            "text": self.text,
+            "path": self.path
+        })
+    }
 }
 
 pub(crate) fn liquid_parse(path: impl AsRef<Path>) -> Template {
@@ -58,9 +71,8 @@ async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder{
     let client = data.client.lock().await.clone();
     info!("Getting post with id {}", path.clone());
     let globals_post = get_post(client.clone(), path.clone()).await;
-    let globals_comments = get_comment(client, path).await;
     let globals = object!(
-        {"post": globals_post, "comments": globals_comments});
+        {"post": globals_post, "comments": globals_post.comments});
     let template = liquid_parse("src/example2/web/post.liquid");
     println!("{:?}", globals);
     let output = template.render(&globals).unwrap();
@@ -105,7 +117,8 @@ async fn create_post_page(data: Data<AppState>, mut post_json: web::Json<Request
     let inserting_post: Post = Post {
         title: request_post.clone().title,
         content: request_post.clone().content,
-        path: random_path()
+        path: random_path(),
+        comments: vec![]
     };
     create_post(client, inserting_post).await;
     HttpResponse::Ok()
@@ -121,7 +134,10 @@ async fn create_comment_page(data: Data<AppState>, comment_json: web::Json<Comme
         text: request_comment.text,
         path: request_comment.path
     };
-    create_comment(client, comment).await;
+    let mut old_post: Post = get_post(client.clone(), comment.path.clone()).await;
+
+    let inserting_post = old_post.clone();
+    create_comment(client, old_post, comment).await;
     HttpResponse::Ok()
 }
 
