@@ -1,7 +1,5 @@
-
-mod example2;
-mod example1;
+mod blog_example;
 
 fn main() {
-    example2::blog::main().unwrap();
+    blog_example::blog::main().unwrap();
 }
