@@ -3,7 +3,7 @@
 
 ## Easy Example
 
-1.Create a blogpost and add title and input
+1. Create a blogpost and add title and input
 2. Create Comments
 3. Display it on a page
 (Really small example, not usable for real blogs)
