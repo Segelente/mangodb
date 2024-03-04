@@ -3,9 +3,8 @@
 
 ## Easy Example
 
-1. Create a new database called `mangodb` and a new collection called `fruity` in the mongo shell.
-2. Make basic operations with the fruitys
-
-## Project Example
-
-1. Make a blog with a database for the posts and the comments
+1.Create a blogpost and add title and input
+2. Create Comments
+3. Display it on a page
+(Really small example, not usable for real blogs)
+Used to show usage of mongodb for presentation
