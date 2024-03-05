@@ -1,6 +1,6 @@
 use futures::TryStreamExt;
-use mongodb::{Client, Collection};
 use mongodb::bson::doc;
+use mongodb::{Client, ClusterTime, Collection};
 
 use crate::blog_example::blog::{Comment, Post};
 
@@ -42,6 +42,15 @@ pub async fn create_comment(client: Client, post: Post, comment: Comment) {
             doc! {"$push":{"comments": comment} },
             None,
         )
+        .await
+        .unwrap();
+}
+
+pub async fn delete_post_query(client: Client, path: String) {
+    let db = client.database("post");
+    let collection: Collection<Post> = db.collection("post");
+    collection
+        .delete_one(doc! {"path": path}, None)
         .await
         .unwrap();
 }

@@ -2,6 +2,7 @@
 use std::fs::read_to_string;
 use std::path::Path;
 
+use actix_web::cookie::time::macros::date;
 use actix_web::web::Data;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use dotenvy;
@@ -13,7 +14,9 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
-use crate::blog_example::queries::{create_comment, create_post, get_all_posts, get_post};
+use crate::blog_example::queries::{
+    create_comment, create_post, delete_post_query, get_all_posts, get_post,
+};
 
 pub(crate) struct AppState {
     client: Mutex<Client>,
@@ -134,7 +137,13 @@ async fn create_comment_page(
     create_comment(client, old_post, comment).await;
     HttpResponse::Ok()
 }
-
+#[post("/delete_post")]
+async fn delete_post(data: Data<AppState>, post_json: web::Json<String>) -> impl Responder {
+    let client = data.client.lock().await.clone();
+    let request_post = post_json.into_inner();
+    delete_post_query(client, request_post).await;
+    HttpResponse::Ok()
+}
 #[actix_web::main]
 pub(crate) async fn main() -> std::io::Result<()> {
     tracing_subscriber::fmt::init();
@@ -153,6 +162,7 @@ pub(crate) async fn main() -> std::io::Result<()> {
             .service(create_post_page)
             .service(new_post)
             .service(create_comment_page)
+            .service(delete_post)
             .app_data(app_state)
     })
     .bind(("127.0.0.1", 8080))?

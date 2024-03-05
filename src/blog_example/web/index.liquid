@@ -1,22 +1,29 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full bg-gray-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MangoDB Blog</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-pink-100 flex justify-center items-center h-full">
-<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md h-full">
-    <h1 class="text-pink-600 text-3xl font-semibold mb-6 text-center">MangoDB Blog</h1>
-    <div class="space-y-4">
-        {% for post in posts %}
-            <a href="/post/{{ post.path }}" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">{{ post.title }}</a>
-        {% endfor %}
+<body class="flex justify-center items-center h-full bg-pink-100">
+    <div class="w-full max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="text-center">
+            <h1 class="font-bold text-4xl text-gray-800 mb-4">MangoDB Blog</h1>
+            <p class="text-gray-600 mb-8">The freshest news and updates on MangoDB</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for post in posts %}
+            <div class="bg-pink-100 rounded-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <a href="/post/{{ post.path }}" class="block p-6">
+                    <h2 class="font-semibold text-lg text-gray-800 mb-2">{{ post.title }}</h2>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="mt-8 text-center">
+            <a href="/new_post" class="inline-block px-6 py-3 bg-pink-600 text-white font-semibold rounded-lg hover:bg-pink-700 transition-colors duration-300">Create New Post</a>
+        </div>
     </div>
-    <div class="mt-6">
-        <a href="/new_post" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">Create new Post</a>
-    </div>
-</div>
 </body>
 </html>

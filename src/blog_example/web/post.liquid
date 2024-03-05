@@ -3,38 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MangoDB Blog</title>
+    <title>{{ post.title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body class="bg-pink-100 flex justify-center items-center h-full">
-<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md h-full">
-    <h1 class="text-pink-600 text-3xl font-semibold mb-6 text-center">
-        {{ post.title }}
-    </h1>
-    <div class="space-y-4">
-        {{ post.content }}
-    </div>
-    <div class="mt-6">
-        <a href="/" class="block px-4 py-2 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 w-full text-center text-lg">Home</a>
-    </div>
-</div>
-<div class="w-full max-w-4xl p-6 bg-white rounded-lg shadow-md bottom-0 h-full">
-    <div class="space-y-4">
-        {% for comment in comments %}
-        <div class="bg-gray-100 p-4 rounded-lg">
-            <h2 class="text-pink-600 text-xl font-semibold">{{ comment.author }}</h2>
-            <p>{{ comment.text }}</p>
+<body class="flex flex-col items-center py-10 bg-pink-100">
+<div class="w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg">
+    <!-- Post Section -->
+    <div class="p-8">
+        <h1 class="text-pink-600 text-4xl font-bold mb-6 text-center">
+            {{ post.title }}
+        </h1>
+        <div class="text-gray-800 text-lg space-y-4">
+            {{ post.content }}
         </div>
-        {% endfor %}
+        <div class="mt-10 text-center">
+            <a href="/"
+               class="inline-block px-6 py-3 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 text-lg font-medium">Back
+                to Home</a>
+            <button type="button" onclick="delete_post()"
+                    class="inline-block px-6 py-3 border-2 border-pink-600 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300 text-lg font-medium">
+                Delete Post
+            </button>
+        </div>
+        <div>
+        </div>
     </div>
-    <div class="space-y-4">
-        <form id="postForm" class="flex flex-col">
-            <label for="author" class="mb-4">author:</label>
-            <input type="text" id="author" name="author" class="border border-gray-300 rounded-lg py-2 px-4">
-            <label for="text" class="mb-4">text:</label>
-            <textarea id="text" name="text" rows="4" cols="50" class="border border-gray-300 rounded-lg py-2 px-4"></textarea>
-            <button type="button" onclick="submit_comment()" class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg w-full">Create Comment</button>
-        </form>
+    <!-- Comments Section -->
+    <div class="p-8 mt-6 border-t">
+        <h2 class="text-pink-600 text-3xl font-semibold mb-4">Comments</h2>
+        <div class="space-y-4">
+            {% for comment in comments %}
+                <div class="bg-gray-100 p-4 rounded-lg shadow">
+                    <h3 class="text-pink-600 text-xl font-semibold">{{ comment.author }}</h3>
+                    <p class="text-gray-700 mt-2">{{ comment.text }}</p>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="mt-8">
+            <form id="postForm" class="flex flex-col space-y-4">
+                <label for="author" class="text-lg font-medium text-gray-700">Author</label>
+                <input type="text" id="author" name="author"
+                       class="border border-gray-300 rounded-lg py-2 px-4 focus:ring-pink-500 focus:border-pink-500">
+                <label for="text" class="text-lg font-medium text-gray-700">Comment</label>
+                <textarea id="text" name="text" rows="4"
+                          class="border border-gray-300 rounded-lg py-2 px-4 focus:ring-pink-500 focus:border-pink-500"></textarea>
+                <button type="button" onclick="submit_comment()"
+                        class="bg-pink-600 hover:bg-pink-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 w-full">
+                    Post Comment
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 </body>
@@ -58,6 +76,24 @@
         }).then(response => {
             if (response.ok) {
                 window.location.href = '/post/' + path;
+            }
+        });
+
+
+    }
+
+    function delete_post() {
+        var path = window.location.pathname.split('/').pop();
+
+        fetch('/delete_post', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(path)
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '/';
             }
         });
     }
