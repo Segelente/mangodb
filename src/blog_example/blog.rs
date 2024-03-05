@@ -9,7 +9,7 @@ use dotenvy;
 use liquid::{object, Template};
 use mongodb::bson::{doc, Bson};
 use mongodb::options::ClientOptions;
-use mongodb::Client;
+use mongodb::{Client, Collection, Database};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
@@ -19,7 +19,7 @@ use crate::blog_example::queries::{
 };
 
 pub(crate) struct AppState {
-    client: Mutex<Client>,
+    database: Mutex<Database>,
 }
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct Post {
@@ -57,8 +57,8 @@ pub(crate) fn liquid_parse(path: impl AsRef<Path>) -> Template {
 
 #[get("/")]
 async fn index(data: Data<AppState>) -> impl Responder {
-    let client = data.client.lock().await.clone();
-    let posts = get_all_posts(client).await;
+    let database = data.database.lock().await.clone();
+    let posts = get_all_posts(database).await;
     let globals = object!(
         {"posts": posts });
     let template = liquid_parse("src/blog_example/web/index.liquid");
@@ -68,8 +68,8 @@ async fn index(data: Data<AppState>) -> impl Responder {
 #[get("/post/{path}")]
 async fn post(data: Data<AppState>, path: web::Path<String>) -> impl Responder {
     let path = path.into_inner();
-    let client = data.client.lock().await.clone();
-    let globals_post = get_post(client.clone(), path.clone()).await;
+    let database = data.database.lock().await.clone();
+    let globals_post = get_post(database.clone(), path.clone()).await;
     let globals = object!(
         {"post": globals_post, "comments": globals_post.comments});
     let template = liquid_parse("src/blog_example/web/post.liquid");
@@ -108,7 +108,7 @@ async fn create_post_page(
     data: Data<AppState>,
     post_json: web::Json<RequestPost>,
 ) -> impl Responder {
-    let client = data.client.lock().await.clone();
+    let database = data.database.lock().await.clone();
     let request_post = post_json.into_inner();
     let inserting_post: Post = Post {
         title: request_post.clone().title,
@@ -116,7 +116,7 @@ async fn create_post_page(
         path: random_path(),
         comments: vec![],
     };
-    create_post(client, inserting_post).await;
+    create_post(database, inserting_post).await;
     HttpResponse::Ok()
 }
 
@@ -126,22 +126,22 @@ async fn create_comment_page(
     comment_json: web::Json<Comment>,
 ) -> impl Responder {
     println!("{:?}", comment_json);
-    let client = data.client.lock().await.clone();
+    let database = data.database.lock().await.clone();
     let request_comment = comment_json.into_inner();
     let comment = Comment {
         author: request_comment.author,
         text: request_comment.text,
         path: request_comment.path,
     };
-    let old_post: Post = get_post(client.clone(), comment.path.clone()).await;
-    create_comment(client, old_post, comment).await;
+    let old_post: Post = get_post(database.clone(), comment.path.clone()).await;
+    create_comment(database, old_post, comment).await;
     HttpResponse::Ok()
 }
 #[post("/delete_post")]
 async fn delete_post(data: Data<AppState>, post_json: web::Json<String>) -> impl Responder {
-    let client = data.client.lock().await.clone();
+    let database = data.database.lock().await.clone();
     let request_post = post_json.into_inner();
-    delete_post_query(client, request_post).await;
+    delete_post_query(database, request_post).await;
     HttpResponse::Ok()
 }
 #[actix_web::main]
@@ -151,10 +151,10 @@ pub(crate) async fn main() -> std::io::Result<()> {
     let db_url = &std::env::var("DATABASE_URL").unwrap();
     let client_options = ClientOptions::parse(db_url).await.unwrap();
     let client = Client::with_options(client_options).unwrap();
-
+    let db = client.database("post");
     HttpServer::new(move || {
         let app_state = Data::new(AppState {
-            client: Mutex::new(client.clone()),
+            database: Mutex::new(db.clone()),
         });
         App::new()
             .service(index)
